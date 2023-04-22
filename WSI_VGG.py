@@ -48,4 +48,4 @@ def load_images():
 
 patches = load_images() # Loading the Extracted Patches
 features = VGG16_feature_extractor(patches) # Extracting Features
-cluster = K_means_clustering(features)  # Performing K-means Clustering on the extracted features
+# cluster = K_means_clustering(features)  # Performing K-means Clustering on the extracted features
