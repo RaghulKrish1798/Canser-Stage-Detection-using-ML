@@ -36,7 +36,7 @@ class ClamAttention(nn.Module):
         fc.append(attention_net)
         self.attention_net = nn.Sequential(*fc)
         self.classifiers = nn.Linear(self.size[1], num_classes)
-        instance_classifiers = nn.Linear(self.size[1], num_classes)
+        instance_classifiers = [nn.Linear(self.size[1], 2) for i in range(num_classes)]
         self.instance_classifiers = nn.ModuleList(instance_classifiers)
         self.k_sample = k_sample
         self.instance_loss_fn = instance_loss_fn
@@ -54,9 +54,15 @@ class ClamAttention(nn.Module):
             print("system not supported for GPU optimization")
             return
         
+        self.attention_net = self.attention_net.to(device=device)
+        self.classifiers = self.classifiers.to(device=device)
+        self.instance_classifiers = self.instance_classifiers.to(device=device)
 
-
-        
-        
-
+    @staticmethod
+    def create_positive_targets(length, device):
+        return torch.full((length, ), 1, device=device).long()
+    
+    @staticmethod
+    def create_negative_targets(length, device):
+        return torch.full((length, ), 0, device=device).long()
     
