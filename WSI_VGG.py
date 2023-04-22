@@ -1,10 +1,12 @@
 import torchvision.models as models
 import torch
 from torchvision import transforms
+from torchvision.datasets import DatasetFolder
+from torch import nn
+import torchvision
+import cv2
 import numpy as np
-import os
 from PIL import Image
-from sklearn.cluster import KMeans
 
 # https://github.com/uta-smile/DeepAttnMISL/blob/master/DeepAttnMISL_model.py
 
@@ -48,4 +50,4 @@ def load_images():
 
 patches = load_images() # Loading the Extracted Patches
 features = VGG16_feature_extractor(patches) # Extracting Features
-# cluster = K_means_clustering(features)  # Performing K-means Clustering on the extracted features
+cluster = K_means_clustering(features)  # Performing K-means Clustering on the extracted features
