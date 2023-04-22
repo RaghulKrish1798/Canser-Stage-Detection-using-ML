@@ -5,8 +5,10 @@ from torchvision.datasets import DatasetFolder
 from torch import nn
 import torchvision
 import cv2
+from sklearn.cluster import KMeans
 import numpy as np
 from PIL import Image
+import os
 
 # https://github.com/uta-smile/DeepAttnMISL/blob/master/DeepAttnMISL_model.py
 
