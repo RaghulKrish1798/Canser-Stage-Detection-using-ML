@@ -11,10 +11,10 @@ from PIL import Image
 # https://github.com/uta-smile/DeepAttnMISL/blob/master/DeepAttnMISL_model.py
 
 # Downloading the pretrained VGG-16 Model
-model = models.vgg16(pretrained=True)
+model = models.vgg16(weights=models.VGG16_Weights)
 
 # Loading the Patches
-data_path = "T:\CV\EXtracted_Patches\TCGA-A1-A0SF-01A\patch_1084.png"
+data_path = "../data/images/TCGA-A1-A0SB-01A/patch_1440.png"
 
 transform = transforms.Compose([
     transforms.Resize(224),  # resize the image to 224x224
