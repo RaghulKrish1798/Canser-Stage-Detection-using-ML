@@ -7,9 +7,12 @@ import os
 from PIL import Image
 from sklearn.model_selection import train_test_split
 from sklearn.cluster import KMeans
+# from numba import cuda
+import gc
 
 # https://github.com/uta-smile/DeepAttnMISL/blob/master/DeepAttnMISL_model.py
 device = torch.device('cuda')
+gc.collect()
 torch.cuda.empty_cache()
 def VGG16_feature_extractor(data):
     # Downloading the pretrained VGG-16 Model
@@ -20,24 +23,65 @@ def VGG16_feature_extractor(data):
     ])
     
     data = [transform(image) for image in data]
-    # Splitting Data into two to accomodate the GPU memeory
-    temp_1, temp_2 = train_test_split(data, test_size=0.5, random_state=42, shuffle=True)
+    t_1, t_2 = train_test_split(data, test_size=0.5, random_state=42, shuffle=True)
+    temp_1, temp_2 = train_test_split(t_1, test_size=0.5, random_state=42, shuffle=True)
+    temp_3, temp_4 = train_test_split(t_2, test_size=0.5, random_state=42, shuffle=True)
+    
     temp_1 = torch.stack(temp_1)
     temp_2 = torch.stack(temp_2)
-    model.eval() # Making model to evaluation mode
+    temp_3 = torch.stack(temp_3)
+    temp_4 = torch.stack(temp_4)
+    model.eval()
 
     with torch.no_grad():
-        # Passing the data through the model in two halves
         temp_1 = temp_1.to(device)
         f_1 = model(temp_1)
         del temp_1
-
+        
         temp_2 = temp_2.to(device)
         f_2 = model(temp_2)
         del temp_2
-        forward = torch.cat((f_1, f_2), dim = 0) # Saving all the extracted features into one variable
-
+        
+        temp_3 = temp_3.to(device)
+        f_3 = model(temp_3)
+        del temp_3
+        
+        temp_4 = temp_4.to(device)
+        f_4 = model(temp_4)
+        del temp_4
+        
+        forward = torch.cat((f_1, f_2, f_3, f_4), dim = 0)
     return forward
+
+def load_images(data_path):
+    # Loading the Patches
+    img_name = os.listdir(data_path)
+    images = []
+    for file_name in img_name:
+        image = Image.open(os.path.join(data_path, file_name))
+        images.append(image)
+    return images
+
+folder_path = "/kaggle/input/train-data"
+
+folders = next(os.walk(folder_path))[1]
+# print(folders)
+def clear_gpu_mem():
+    gc.collect()
+    torch.cuda.empty_cache()
+#     cuda.select_device(0)
+#     cuda.close()
+#     cuda.select_device(0)
+
+for file_name in folders:
+    data_path = f"/kaggle/input/train-data/{file_name}"
+    patches = load_images(data_path) # Loading the Extracted Patches
+    features = VGG16_feature_extractor(patches) # Extracting Features
+    print(features.shape)
+    features_df = pd.DataFrame(features.cpu().numpy())
+    features_df.to_csv(f"{file_name}.csv")
+    print(file_name)
+    clear_gpu_mem()
 
 
 # def K_means_clustering(feature):
@@ -49,22 +93,5 @@ def VGG16_feature_extractor(data):
 #     print(cluster_assignments.shape)
 #     print(cluster_assignments)
 #     return cluster_assignments
-
-
-def load_images():
-    # Loading the Patches
-    data_path = "/kaggle/input/test-data/TCGA-A1-A0SF-01A"
-    img_name = os.listdir(data_path)
-    images = []
-    for file_name in img_name:
-        image = Image.open(os.path.join(data_path, file_name))
-        images.append(image)
-    return images
-
-patches = load_images() # Loading the Extracted Patches
-features = VGG16_feature_extractor(patches) # Extracting Features
-print(features.shape)
-features_df = pd.DataFrame(features.cpu().numpy())
-features_df.to_csv("TCGA-A1-A0SF-01A.csv")
 
 # cluster = K_means_clustering(features)  # Performing K-means Clustering on the extracted features
