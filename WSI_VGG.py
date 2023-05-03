@@ -6,8 +6,6 @@ import pandas as pd
 import os
 from PIL import Image
 from sklearn.model_selection import train_test_split
-from sklearn.cluster import KMeans
-# from numba import cuda
 import gc
 
 # https://github.com/uta-smile/DeepAttnMISL/blob/master/DeepAttnMISL_model.py
@@ -69,9 +67,6 @@ folders = next(os.walk(folder_path))[1]
 def clear_gpu_mem():
     gc.collect()
     torch.cuda.empty_cache()
-#     cuda.select_device(0)
-#     cuda.close()
-#     cuda.select_device(0)
 
 for file_name in folders:
     data_path = f"/kaggle/input/train-data/{file_name}"
@@ -82,16 +77,3 @@ for file_name in folders:
     features_df.to_csv(f"{file_name}.csv")
     print(file_name)
     clear_gpu_mem()
-
-
-# def K_means_clustering(feature):
-#     feature = np.array(feature)
-#     k = 10
-#     kmeans = KMeans(n_clusters=k, init='k-means++', max_iter=300, n_init=10, random_state=0)
-#     kmeans.fit(feature)
-#     cluster_assignments = kmeans.labels_
-#     print(cluster_assignments.shape)
-#     print(cluster_assignments)
-#     return cluster_assignments
-
-# cluster = K_means_clustering(features)  # Performing K-means Clustering on the extracted features

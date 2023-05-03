@@ -1,0 +1,24 @@
+import numpy as np
+from sklearn.cluster import KMeans
+import pandas as pd
+import glob
+
+def K_means_clustering(feature, k):
+    feature = np.array(feature)
+    kmeans = KMeans(n_clusters = k, init = 'k-means++', max_iter = 300, n_init = 10, random_state = 0)
+    kmeans.fit(feature)
+    cluster_assignments = kmeans.labels_
+    print(cluster_assignments.shape)
+    return cluster_assignments
+
+# get a list of all csv files in the folder
+csv_files = glob.glob("C:/Users/RaghulKrish/Desktop/UB/Spring_23/CVIP/Project/extracted_features/*.csv")
+
+features = []
+
+for file_name in csv_files:
+    features.append(pd.read_csv(file_name))
+
+features = pd.concat(features, ignore_index=True)
+
+cluster = K_means_clustering(feature = features, k = 10)  # Performing K-means Clustering on the extracted features
