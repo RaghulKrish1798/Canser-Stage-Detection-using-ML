@@ -9,7 +9,9 @@ def K_means_clustering(feature, k):
     kmeans.fit(feature)
     cluster_assignments = kmeans.labels_
     print(cluster_assignments.shape)
-    return cluster_assignments
+    # Calculating the sum of the intra-cluster distances
+    inertia = kmeans.inertia_
+    return cluster_assignments, inertia
 
 # get a list of all csv files in the folder
 csv_files = glob.glob("C:/Users/RaghulKrish/Desktop/UB/Spring_23/CVIP/Project/extracted_features/*.csv")
@@ -21,4 +23,36 @@ for file_name in csv_files:
 
 features = pd.concat(features, ignore_index=True)
 
-cluster = K_means_clustering(feature = features, k = 10)  # Performing K-means Clustering on the extracted features
+# Performing K-means Clustering on the extracted features
+
+clusters = []
+k = []
+performances = []
+
+for i in range(1, 100):
+    if i % 10 == 0:
+        cluster, performance = K_means_clustering(feature = features, k = i)
+        clusters.append(cluster)
+        performances.append(performance)
+        k.append(i)
+        print(f'The sum of the intra-cluster distances with k = {i}: {performance}')
+
+# Output
+
+# The sum of the intra-cluster distances with k = 10: 279507304.39437026
+
+# The sum of the intra-cluster distances with k = 20: 119820035.8679346
+
+# The sum of the intra-cluster distances with k = 30: 90175175.03732808
+
+# The sum of the intra-cluster distances with k = 40: 80078350.06656204
+
+# The sum of the intra-cluster distances with k = 50: 74930673.46206352
+
+# The sum of the intra-cluster distances with k = 60: 71614177.40691228
+
+# The sum of the intra-cluster distances with k = 70: 68811994.08135472
+
+# The sum of the intra-cluster distances with k = 80: 66896054.8524615
+
+# The sum of the intra-cluster distances with k = 90: 65219141.096590966
