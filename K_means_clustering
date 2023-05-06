@@ -2,41 +2,58 @@ import numpy as np
 from sklearn.cluster import KMeans
 import pandas as pd
 import glob
+import os
 
 def K_means_clustering(feature, k):
     feature = np.array(feature)
     kmeans = KMeans(n_clusters = k, init = 'k-means++', max_iter = 300, n_init = 10, random_state = 0)
     kmeans.fit(feature)
     cluster_assignments = kmeans.labels_
-    # print(cluster_assignments.shape)
+     
     # Calculating the sum of the intra-cluster distances
     inertia = kmeans.inertia_
     return cluster_assignments, inertia
 
 # get a list of all csv files in the folder
-csv_files = glob.glob("C:/Users/RaghulKrish/Desktop/UB/Spring_23/CVIP/Project/extracted_features/*.csv")
+# csv_files = glob.glob("C:/Users/RaghulKrish/Desktop/UB/Spring_23/CVIP/Project/extracted_features/*.csv")
 
-features = []
+# features = []
 
-for file_name in csv_files:
-    features.append(pd.read_csv(file_name))
+# for file_name in csv_files:
+#     features.append(pd.read_csv(file_name))
 
-features = pd.concat(features, ignore_index=True)
+# features = pd.concat(features, ignore_index=True)
 
-# Performing K-means Clustering on the extracted features
+vgg_features = []
+pid = []
+patient_list =  os.listdir('C:/Users/RaghulKrish/Desktop/UB/Spring_23/CVIP/Project/extracted_features/')
+for name in patient_list:
+    df = pd.read_csv(f'C:/Users/RaghulKrish/Desktop/UB/Spring_23/CVIP/Project/extracted_features/{name}')
+    name = name.lower()
+    pid.append([name[:-8]] * len(df))
+    # df['pid'] = [name[:-8]] * len(df)
+    vgg_features.append(df)
+vgg_features = pd.concat(vgg_features, ignore_index = True)
 
-# clusters = []
-# k = []
-performances = []
-k_range = [24, 26, 28, 32, 34, 36, 38, 42]
+cluster_assign, performance = K_means_clustering(feature = vgg_features, k = 20)
 
-for i in k_range:
-    # if i % 10 == 0:
-    cluster, performance = K_means_clustering(feature = features, k = i)
-    # clusters.append(cluster)
-    performances.append(performance)
-    # k.append(i)
-    print(f'The sum of the intra-cluster distances with k = {i}: {performance}')
+print(cluster_assign.shape)
+vgg_features['cluster_num'] = [cluster_assign]
+vgg_features['pid'] = [pid]
+
+print(vgg_features.head())
+# for i in k_range:
+#     # if i % 10 == 0:
+#     cluster, performance = K_means_clustering(feature = features, k = i)
+#     # clusters.append(cluster)
+#     performances.append(performance)
+#     # k.append(i)
+#     print(f'The sum of the intra-cluster distances with k = {i}: {performance}')
+
+# for i, file_name in enumerate(csv_files):
+#     patient_features = pd.read_csv(file_name)
+#     patient_cluster_label = kmeans.predict(patient_features.mean(axis=0).values.reshape(1, -1))[0]
+#     print(f"Patient {i} assigned to cluster {patient_cluster_label}")
 
 # Output
 
@@ -81,6 +98,5 @@ for i in k_range:
 # The sum of the intra-cluster distances with k = 73: 68268544.59090754
 # The sum of the intra-cluster distances with k = 74: 68078537.68454312
 # The sum of the intra-cluster distances with k = 75: 67870678.89456154
-
 # The sum of the intra-cluster distances with k = 80: 66896054.8524615
 # The sum of the intra-cluster distances with k = 90: 65219141.096590966
