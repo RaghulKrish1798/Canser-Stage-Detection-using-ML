@@ -3,7 +3,7 @@ from torch.utils.data import Dataset
 import pandas as pd
 import numpy as np
 import random
-import defaultdict
+# import defaultdict
 
 # clustered_data = pd.read_csv("clustered_data.csv", delimiter=",")
 
