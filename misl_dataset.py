@@ -92,9 +92,14 @@ def train_valid_test_split(data_path, label_path, test_fraction, valid_fraction,
 
     data = pd.read_csv(data_path, delimiter=",")
     labels = pd.read_csv(label_path, delimiter=",")
+    labels = remove_unwanted_labels(labels)
 
     data = data.loc[data['pid'].isin(labels.pid.values)]
     labels = labels.loc[labels['pid'].isin(data.pid.values)]
+
+    print(len(data))
+    print(len(labels))
+
 
     x_test, y_test, x_train_val, y_train_val = stratified_split(data, labels, test_fraction, random_state)
     x_val, y_val, x_train, y_train = stratified_split(x_train_val, y_train_val, valid_fraction, random_state)
@@ -106,3 +111,7 @@ def train_valid_test_split(data_path, label_path, test_fraction, valid_fraction,
 
 
     return train_dataset, valid_dataset, test_dataset
+
+def remove_unwanted_labels(stage_idx:pd.DataFrame) -> pd.DataFrame:
+    final_df = stage_idx.loc[(stage_idx['stage'] == "stage i") | (stage_idx['stage'] == "stage ia") | (stage_idx['stage'] == "stage ib") | (stage_idx['stage'] == "stage ii") | (stage_idx['stage'] == "stage iia") | (stage_idx['stage'] == "stage iib")]
+    return final_df
