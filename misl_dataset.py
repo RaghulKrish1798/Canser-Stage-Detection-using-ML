@@ -61,14 +61,7 @@ def one_hot_binary(label):
     else:
         raise ValueError
 
-
-def train_test_split(data_path, label_path, fraction, random_state=None):
-
-    data = pd.read_csv(data_path, delimiter=",")
-    labels = pd.read_csv(label_path, delimiter=",")
-
-    data = data.loc[data['pid'].isin(labels.pid.values)]
-    labels = labels.loc[labels['pid'].isin(data.pid.values)]
+def stratified_split(data, labels, fraction, random_state=None):
 
     if random_state:
         random.seed(random_state)
@@ -93,7 +86,23 @@ def train_test_split(data_path, label_path, fraction, random_state=None):
     second_set_inputs = data.loc[second_set_indices]
     second_set_labels = labels.loc[second_set_indices]
 
-    test_dataset = CustomDataset(first_set_inputs, first_set_labels)
-    train_dataset = CustomDataset(second_set_inputs, second_set_labels)
+    return first_set_inputs, first_set_labels, second_set_inputs, second_set_labels
 
-    return test_dataset, train_dataset
+def train_valid_test_split(data_path, label_path, test_fraction, valid_fraction, random_state=None):
+
+    data = pd.read_csv(data_path, delimiter=",")
+    labels = pd.read_csv(label_path, delimiter=",")
+
+    data = data.loc[data['pid'].isin(labels.pid.values)]
+    labels = labels.loc[labels['pid'].isin(data.pid.values)]
+
+    x_test, y_test, x_train_val, y_train_val = stratified_split(data, labels, test_fraction, random_state)
+    x_val, y_val, x_train, y_train = stratified_split(x_train_val, y_train_val, valid_fraction, random_state)
+    
+
+    test_dataset = CustomDataset(x_test, y_test)
+    valid_dataset = CustomDataset(x_val, y_val)
+    train_dataset = CustomDataset(x_train, y_train)
+
+
+    return train_dataset, valid_dataset, test_dataset
