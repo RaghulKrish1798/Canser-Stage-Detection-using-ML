@@ -2,6 +2,8 @@ import torch
 from torch.utils.data import Dataset
 import pandas as pd
 import numpy as np
+import random
+import defaultdict
 
 # clustered_data = pd.read_csv("clustered_data.csv", delimiter=",")
 
@@ -13,18 +15,13 @@ import numpy as np
     
 class CustomDataset(Dataset):
 
-    def __init__(self, data_path, label_path, cluster_num=10) -> None:
+    def __init__(self, features, labels, cluster_num=10) -> None:
         super(CustomDataset, self).__init__()
-        data = pd.read_csv(data_path, delimiter=",")
-        labels = pd.read_csv(label_path, delimiter=",")
 
-        data = data.loc[data['pid'].isin(labels.pid.values)]
-        labels = labels.loc[labels['pid'].isin(data.pid.values)]
-
-        self.data = data
+        self.data = features
         self.labels = labels
         self.labels['stage'] = self.labels.stage.map(lambda x: one_hot_binary(x))
-        self.patients = data.pid.values
+        self.patients = self.data.pid.values
         self.cluster_num = cluster_num
 
     def len(self):
@@ -34,7 +31,7 @@ class CustomDataset(Dataset):
 
         patient = self.patients[index]
         patient_rows = self.data.loc[self.data['pid'] == patient]
-        
+
         cluster_data = {}
         mask = np.zeros((1, self.cluster_num), dtype=np.float16)
         
@@ -63,3 +60,40 @@ def one_hot_binary(label):
         return [0,1]
     else:
         raise ValueError
+
+
+def train_test_split(data_path, label_path, fraction, random_state=None):
+
+    data = pd.read_csv(data_path, delimiter=",")
+    labels = pd.read_csv(label_path, delimiter=",")
+
+    data = data.loc[data['pid'].isin(labels.pid.values)]
+    labels = labels.loc[labels['pid'].isin(data.pid.values)]
+
+    if random_state:
+        random.seed(random_state)
+
+    indices_per_label = defaultdict(list)
+    
+    for stage in labels['stage'].unique():
+        indices_per_label[stage] = labels[labels['stage']==stage].index.values
+    
+    first_set_indices, second_set_indices = list(), list()
+
+    first_set_indices, second_set_indices = list(), list()
+
+    for label, indices in indices_per_label.items():
+        n_samples_for_label = round(len(indices) * fraction)
+        random_indices_sample = random.sample(indices.tolist(), n_samples_for_label)
+        first_set_indices.extend(random_indices_sample)
+        second_set_indices.extend(set(indices.tolist()) - set(random_indices_sample))
+    
+    first_set_inputs = data.loc[first_set_indices]
+    first_set_labels = labels.loc[first_set_indices]
+    second_set_inputs = data.loc[second_set_indices]
+    second_set_labels = labels.loc[second_set_indices]
+
+    test_dataset = CustomDataset(first_set_inputs, first_set_labels)
+    train_dataset = CustomDataset(second_set_inputs, second_set_labels)
+
+    return test_dataset, train_dataset
