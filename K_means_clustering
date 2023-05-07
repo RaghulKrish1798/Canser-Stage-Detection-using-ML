@@ -1,0 +1,102 @@
+import numpy as np
+from sklearn.cluster import KMeans
+import pandas as pd
+import glob
+import os
+
+def K_means_clustering(feature, k):
+    feature = np.array(feature)
+    kmeans = KMeans(n_clusters = k, init = 'k-means++', max_iter = 300, n_init = 10, random_state = 0)
+    kmeans.fit(feature)
+    cluster_assignments = kmeans.labels_
+     
+    # Calculating the sum of the intra-cluster distances
+    inertia = kmeans.inertia_
+    return cluster_assignments, inertia
+
+# get a list of all csv files in the folder
+# csv_files = glob.glob("C:/Users/RaghulKrish/Desktop/UB/Spring_23/CVIP/Project/extracted_features/*.csv")
+
+# features = []
+
+# for file_name in csv_files:
+#     features.append(pd.read_csv(file_name))
+
+# features = pd.concat(features, ignore_index=True)
+
+vgg_features = []
+pid = []
+patient_list =  os.listdir('C:/Users/RaghulKrish/Desktop/UB/Spring_23/CVIP/Project/extracted_features/')
+for name in patient_list:
+    df = pd.read_csv(f'C:/Users/RaghulKrish/Desktop/UB/Spring_23/CVIP/Project/extracted_features/{name}')
+    name = name.lower()
+    pid.append([name[:-8]] * len(df))
+    # df['pid'] = [name[:-8]] * len(df)
+    vgg_features.append(df)
+vgg_features = pd.concat(vgg_features, ignore_index = True)
+
+cluster_assign, performance = K_means_clustering(feature = vgg_features, k = 20)
+
+print(cluster_assign.shape)
+vgg_features['cluster_num'] = [cluster_assign]
+vgg_features['pid'] = [pid]
+
+print(vgg_features.head())
+# for i in k_range:
+#     # if i % 10 == 0:
+#     cluster, performance = K_means_clustering(feature = features, k = i)
+#     # clusters.append(cluster)
+#     performances.append(performance)
+#     # k.append(i)
+#     print(f'The sum of the intra-cluster distances with k = {i}: {performance}')
+
+# for i, file_name in enumerate(csv_files):
+#     patient_features = pd.read_csv(file_name)
+#     patient_cluster_label = kmeans.predict(patient_features.mean(axis=0).values.reshape(1, -1))[0]
+#     print(f"Patient {i} assigned to cluster {patient_cluster_label}")
+
+# Output
+
+# The sum of the intra-cluster distances with k = 5: 899374857.4906752
+# The sum of the intra-cluster distances with k = 7: 493885360.67924106
+# The sum of the intra-cluster distances with k = 10: 279507304.39437026
+# The sum of the intra-cluster distances with k = 13: 192762446.10741282
+# The sum of the intra-cluster distances with k = 16: 149976244.26884627
+# The sum of the intra-cluster distances with k = 18: 132627470.88429199
+# The sum of the intra-cluster distances with k = 20: 119820035.8679346
+# The sum of the intra-cluster distances with k = 22: 110643406.70835985
+# The sum of the intra-cluster distances with k = 24: 103538074.77925858
+# The sum of the intra-cluster distances with k = 26: 98145527.70138356
+# The sum of the intra-cluster distances with k = 28: 93779817.70699859
+# The sum of the intra-cluster distances with k = 30: 90175175.03732808
+# The sum of the intra-cluster distances with k = 32: 87382083.81230727
+# The sum of the intra-cluster distances with k = 34: 84933857.56733805
+# The sum of the intra-cluster distances with k = 36: 82992524.06185217
+# The sum of the intra-cluster distances with k = 38: 81304008.377099
+# The sum of the intra-cluster distances with k = 40: 80078350.06656204
+# The sum of the intra-cluster distances with k = 42: 78636240.56349382
+# The sum of the intra-cluster distances with k = 44: 77669472.79015556
+# The sum of the intra-cluster distances with k = 46: 76559564.74669926
+# The sum of the intra-cluster distances with k = 48: 75814503.86044216
+# The sum of the intra-cluster distances with k = 50: 74930673.46206352
+# The sum of the intra-cluster distances with k = 52: 74235754.00578767
+# The sum of the intra-cluster distances with k = 54: 73509421.61521612
+# The sum of the intra-cluster distances with k = 56: 72879698.45582093
+# The sum of the intra-cluster distances with k = 58: 72107434.32019722
+# The sum of the intra-cluster distances with k = 60: 71614177.40691228
+# The sum of the intra-cluster distances with k = 62: 71053366.26942834
+# The sum of the intra-cluster distances with k = 63: 70563916.80869778
+# The sum of the intra-cluster distances with k = 64: 70445107.03343274
+# The sum of the intra-cluster distances with k = 65: 70027340.93321155
+# The sum of the intra-cluster distances with k = 66: 69840574.73109706
+# The sum of the intra-cluster distances with k = 67: 69593379.29627277
+# The sum of the intra-cluster distances with k = 68: 69364971.29753602
+# The sum of the intra-cluster distances with k = 69: 69145707.15635027
+# The sum of the intra-cluster distances with k = 70: 68811994.08135472
+# The sum of the intra-cluster distances with k = 71: 68632668.60723907
+# The sum of the intra-cluster distances with k = 72: 68570791.2713398
+# The sum of the intra-cluster distances with k = 73: 68268544.59090754
+# The sum of the intra-cluster distances with k = 74: 68078537.68454312
+# The sum of the intra-cluster distances with k = 75: 67870678.89456154
+# The sum of the intra-cluster distances with k = 80: 66896054.8524615
+# The sum of the intra-cluster distances with k = 90: 65219141.096590966
