@@ -24,7 +24,7 @@ class CustomDataset(Dataset):
         self.patients = self.data.pid.values
         self.cluster_num = cluster_num
 
-    def len(self):
+    def __len__(self):
         return len(self.labels)
     
     def __getitem__(self, index):
