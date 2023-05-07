@@ -66,7 +66,7 @@ def stratified_split(data, labels, fraction, random_state=None):
     if random_state:
         random.seed(random_state)
 
-    indices_per_label = defaultdict(list)
+    indices_per_label = {}
     
     for stage in labels['stage'].unique():
         indices_per_label[stage] = labels[labels['stage']==stage].index.values
