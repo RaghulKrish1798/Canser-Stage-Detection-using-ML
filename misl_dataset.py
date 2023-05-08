@@ -21,34 +21,38 @@ class CustomDataset(Dataset):
         self.data = features
         self.labels = labels
         self.labels['stage'] = self.labels.stage.map(lambda x: one_hot_binary(x))
-        self.patients = self.data.pid.values
+        self.patients = self.data.pid.unique()
         self.cluster_num = cluster_num
 
     def __len__(self):
-        return len(self.labels)
+        return len(self.patients)
     
     def __getitem__(self, index):
 
+
         patient = self.patients[index]
+        # print(patient)
         patient_rows = self.data.loc[self.data['pid'] == patient]
 
-        cluster_data = {}
-        mask = np.zeros((1, self.cluster_num), dtype=np.float16)
+        cluster_data = [torch.Tensor(np.zeros((1, 1000)))] * self.cluster_num
+        mask = np.zeros(self.cluster_num)
         
         for cluster_number in patient_rows['cluster_num'].unique():
             mask[cluster_number] = 1
-            cluster_data[cluster_number] = torch.Tensor(patient_rows.loc[patient_rows['cluster_num']==cluster_number].drop(columns=["pid", "cluster_num"]).transpose().values, dtype=torch.float32)
+            cluster_data[cluster_number] = torch.Tensor(patient_rows.loc[patient_rows['cluster_num']==cluster_number].drop(columns=["pid", "cluster_num"]).values)
         
-        for i in range(self.cluster_num):
-            if i not in cluster_data.keys():
-                cluster_data[i] = torch.Tensor(np.zeros(1, 1000), dtype=np.float32)
+        mask = torch.tensor(mask)
+
+        # print(patient in self.labels.pid.values)
         
-        mask = torch.Tensor(mask, dtype=torch.float32)
+        label = self.labels[self.labels['pid'] == patient]['stage'].values[0]
+        # print(self.labels.loc[self.labels['pid'] == patient]['stage'])
 
-        label = self.labels['stage'].loc[self.labels['pid'] == patient].values
-        label = torch.Tensor(label, dtype=torch.float32)
+        # print(label)
+        # raise ValueError
+        label = torch.Tensor(label)
 
-        return cluster_data, mask, label
+        return (cluster_data, mask), label
 
 
 
@@ -66,25 +70,25 @@ def stratified_split(data, labels, fraction, random_state=None):
     if random_state:
         random.seed(random_state)
 
-    indices_per_label = {}
+    patients_per_label = {}
     
     for stage in labels['stage'].unique():
-        indices_per_label[stage] = labels[labels['stage']==stage].index.values
+        patients_per_label[stage] = set(labels[labels['stage']==stage].pid.values)
     
-    first_set_indices, second_set_indices = list(), list()
+    first_set_patients, second_set_patients = list(), list()
 
-    first_set_indices, second_set_indices = list(), list()
-
-    for label, indices in indices_per_label.items():
-        n_samples_for_label = round(len(indices) * fraction)
-        random_indices_sample = random.sample(indices.tolist(), n_samples_for_label)
-        first_set_indices.extend(random_indices_sample)
-        second_set_indices.extend(set(indices.tolist()) - set(random_indices_sample))
+    for label, patients in patients_per_label.items():
+        n_patients_for_label = round(len(patients) * fraction)
+        random_patients_sample = random.sample(patients, n_patients_for_label)
+        first_set_patients.extend(random_patients_sample)
+        second_set_patients.extend(patients - set(random_patients_sample))
     
-    first_set_inputs = data.loc[first_set_indices]
-    first_set_labels = labels.loc[first_set_indices]
-    second_set_inputs = data.loc[second_set_indices]
-    second_set_labels = labels.loc[second_set_indices]
+    first_set_inputs = data.loc[data['pid'].isin(first_set_patients)]
+    first_set_labels = labels.loc[labels['pid'].isin(first_set_patients)]
+    second_set_inputs = data.loc[data['pid'].isin(second_set_patients)]
+    second_set_labels = labels.loc[labels['pid'].isin(second_set_patients)]
+    print(first_set_inputs.pid.values)
+    print(first_set_labels.pid.values)
 
     return first_set_inputs, first_set_labels, second_set_inputs, second_set_labels
 
@@ -93,12 +97,17 @@ def train_valid_test_split(data_path, label_path, test_fraction, valid_fraction,
     data = pd.read_csv(data_path, delimiter=",")
     labels = pd.read_csv(label_path, delimiter=",")
     labels = remove_unwanted_labels(labels)
+    labels.drop(columns=["Unnamed: 0"], inplace=True)
 
-    data = data.loc[data['pid'].isin(labels.pid.values)]
-    labels = labels.loc[labels['pid'].isin(data.pid.values)]
+    data = data[data['pid'].isin(labels.pid.values)]
+    labels = labels[labels['pid'].isin(data.pid.values)]
 
-    print(len(data))
-    print(len(labels))
+
+    data.sort_values(by="pid", inplace=True)
+    labels.sort_values(by="pid", inplace=True)
+
+    # print(len(data))
+    # print(len(labels))
 
 
     x_test, y_test, x_train_val, y_train_val = stratified_split(data, labels, test_fraction, random_state)
