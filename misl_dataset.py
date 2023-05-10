@@ -20,6 +20,7 @@ class CustomDataset(Dataset):
 
         self.data = features
         self.labels = labels
+
         self.labels['stage'] = self.labels.stage.map(lambda x: one_hot_binary(x))
         self.patients = self.data.pid.unique()
         self.cluster_num = cluster_num
@@ -80,15 +81,19 @@ def stratified_split(data, labels, fraction, random_state=None):
     for label, patients in patients_per_label.items():
         n_patients_for_label = round(len(patients) * fraction)
         random_patients_sample = random.sample(patients, n_patients_for_label)
-        first_set_patients.extend(random_patients_sample)
+        if label == "stage ii":
+            appending_patients_sample = random.sample(random_patients_sample, round(len(random_patients_sample) * 0.65))
+        else:
+            appending_patients_sample = random_patients_sample
+        first_set_patients.extend(appending_patients_sample)
         second_set_patients.extend(patients - set(random_patients_sample))
     
     first_set_inputs = data.loc[data['pid'].isin(first_set_patients)]
     first_set_labels = labels.loc[labels['pid'].isin(first_set_patients)]
     second_set_inputs = data.loc[data['pid'].isin(second_set_patients)]
     second_set_labels = labels.loc[labels['pid'].isin(second_set_patients)]
-    print(first_set_inputs.pid.values)
-    print(first_set_labels.pid.values)
+    # print(first_set_inputs.pid.values)
+    # print(first_set_labels.pid.values)
 
     return first_set_inputs, first_set_labels, second_set_inputs, second_set_labels
 
@@ -99,6 +104,7 @@ def train_valid_test_split(data_path, label_path, test_fraction, valid_fraction,
     labels = remove_unwanted_labels(labels)
     labels.drop(columns=["Unnamed: 0"], inplace=True)
 
+    print(len)
     data = data[data['pid'].isin(labels.pid.values)]
     labels = labels[labels['pid'].isin(data.pid.values)]
 
@@ -109,9 +115,18 @@ def train_valid_test_split(data_path, label_path, test_fraction, valid_fraction,
     # print(len(data))
     # print(len(labels))
 
+    labels['stage'] = labels.stage.map(lambda x: map_to_one_hot_binary_logits(x))
+
 
     x_test, y_test, x_train_val, y_train_val = stratified_split(data, labels, test_fraction, random_state)
-    x_val, y_val, x_train, y_train = stratified_split(x_train_val, y_train_val, valid_fraction, random_state)
+    x_val, y_val, x_train_raw, y_train_raw = stratified_split(x_train_val, y_train_val, valid_fraction, random_state)
+    x_train, y_train, _, _ = stratified_split(data, labels, 1.0, random_state)
+
+
+    print(f"test stage values: {y_test.stage.value_counts()}")
+    print(f"train stage values: {y_train.stage.value_counts()}")
+    print(f"validation stage values: {y_val.stage.value_counts()}")
+
     
 
     test_dataset = CustomDataset(x_test, y_test)
@@ -124,3 +139,11 @@ def train_valid_test_split(data_path, label_path, test_fraction, valid_fraction,
 def remove_unwanted_labels(stage_idx:pd.DataFrame) -> pd.DataFrame:
     final_df = stage_idx.loc[(stage_idx['stage'] == "stage i") | (stage_idx['stage'] == "stage ia") | (stage_idx['stage'] == "stage ib") | (stage_idx['stage'] == "stage ii") | (stage_idx['stage'] == "stage iia") | (stage_idx['stage'] == "stage iib")]
     return final_df
+
+def map_to_one_hot_binary_logits(stage:str) -> str:
+    if ((stage=="stage i") | (stage=="stage ia") | (stage=="stage ib")):
+        return "stage i"
+    elif (stage=="stage ii") | (stage=="stage iia") | (stage=="stage iib"):
+        return "stage ii"
+    else:
+        raise(ValueError)
