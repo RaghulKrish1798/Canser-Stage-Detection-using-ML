@@ -3,8 +3,6 @@ Taking the data and slicing it up into patches
 '''
 
 
-### PURE FAILURE ###
-
 import openslide
 import os
 from glob import glob
@@ -78,7 +76,6 @@ for dirpath in dirpaths:
             white_ratio = 100 * white_num / float(PATCH_RES**2)
             is_white = white_ratio > 45.0
 
-            
             
             # Appending the patch to the overall patches extracted from the image
             if not is_white:
