@@ -3,8 +3,6 @@ Taking the data and slicing it up into patches
 '''
 
 
-### PURE FAILURE ###
-
 import openslide
 import os
 from glob import glob
@@ -18,11 +16,6 @@ IMAGE_LEVEL = 1
 PATCH_RES = 224
 
 dirpaths = glob('../dataset/*/*.svs')
-# print(dirpaths[0])
-
-
-
-# print(test_Slide.level_downsamples)
 
 dirnum = 0
 
@@ -47,11 +40,6 @@ for dirpath in dirpaths:
     origin_begin = time.time()
     not_selected_wr = []
     not_selected_list = []
-
-    # total_test_region = test_Slide.read_region((0, 0), IMAGE_LEVEL, (x_dim,y_dim))
-    # plt.imshow(total_test_region)
-    # plt.show()
-
 
 
     for x in range(0, x_dim, PATCH_RES):
@@ -83,8 +71,6 @@ for dirpath in dirpaths:
             white_ratio = 100 * white_num / float(PATCH_RES**2)
             is_white = white_ratio > 45.0
 
-            # if(patch_counter in not_selected_list):
-            #     not_selected_wr.append(white_ratio)
             
             # Appending the patch to the overall patches extracted from the image
             if not is_white:
@@ -92,10 +78,6 @@ for dirpath in dirpaths:
                 cv2.imwrite(f'../extracted_patches/{dirpath[48:64]}/patch_{patch_counter}.png', test_region)
 
             end_time = time.time()
-            # slide_status = "Rejected" if is_white else "Accepted"
-
-
-            # print(f"Patch {patch_counter}/{total_patches}, time: {end_time - beginnning}, status: {slide_status}")
 
     final_end = time.time()
     print(f'dir {dirnum} processed')
