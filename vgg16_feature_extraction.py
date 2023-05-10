@@ -10,7 +10,7 @@ from sklearn.cluster import KMeans
 import gc
 
 # https://github.com/uta-smile/DeepAttnMISL/blob/master/DeepAttnMISL_model.py
-device = torch.device('cuda')
+device = torch.device('mps')
 gc.collect()
 torch.cuda.empty_cache()
 
@@ -24,7 +24,7 @@ def VGG16_feature_extractor(data):
     
     data = [transform(image) for image in data]
     model.eval()
-    if len(data) < 25:
+    if len(data) < 50:
         data = torch.stack(data)
 
         with torch.no_grad():
@@ -207,7 +207,7 @@ def load_images(data_path):
     return images
 
 # folder_path = "/kaggle/input/train-data"
-folder_path = "/extracted_patches"
+folder_path = "../data/test_images_svs"
 
 folders = next(os.walk(folder_path))[1]
 # print(folders)
@@ -222,11 +222,11 @@ extracted_patients = []
 list_of_dirs = os.listdir(folder_path)
 dirs_to_extract = set(list_of_dirs) - set(bad_patients)
 clear_gpu_mem()
-for file_name in bad_patients:
+for file_name in list_of_dirs:
     
     print(file_name)
     
-    if os.path.exists(os.path.join(f"{file_name}.csv")):
+    if os.path.exists(os.path.join(f"../data/test_images/{file_name[:12]}.csv")):
         continue
     
     else:
@@ -237,7 +237,7 @@ for file_name in bad_patients:
             features = VGG16_feature_extractor(patches) # Extracting Features
             print(features.shape)
             features_df = pd.DataFrame(features.cpu().numpy())
-            features_df.to_csv(f"{file_name}.csv")
+            features_df.to_csv(f"../data/test_images/{file_name[:12]}.csv")
             extracted_patients.append(file_name)
             clear_gpu_mem()
         

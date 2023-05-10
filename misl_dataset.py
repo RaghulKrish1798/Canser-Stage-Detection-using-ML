@@ -97,7 +97,7 @@ def stratified_split(data, labels, fraction, random_state=None):
 
     return first_set_inputs, first_set_labels, second_set_inputs, second_set_labels
 
-def train_valid_test_split(data_path, label_path, test_fraction, valid_fraction, random_state=None):
+def train_valid_test_split(data_path, label_path, test_fraction=0.2, valid_fraction=0.1, random_state=None, test_mode=False):
 
     data = pd.read_csv(data_path, delimiter=",")
     labels = pd.read_csv(label_path, delimiter=",")
@@ -117,6 +117,8 @@ def train_valid_test_split(data_path, label_path, test_fraction, valid_fraction,
 
     labels['stage'] = labels.stage.map(lambda x: map_to_one_hot_binary_logits(x))
 
+    if test_mode:
+         return(CustomDataset(data, labels, cluster_num=10))
 
     x_test, y_test, x_train_val, y_train_val = stratified_split(data, labels, test_fraction, random_state)
     x_val, y_val, x_train_raw, y_train_raw = stratified_split(x_train_val, y_train_val, valid_fraction, random_state)
