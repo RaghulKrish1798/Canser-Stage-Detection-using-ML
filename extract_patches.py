@@ -15,8 +15,7 @@ import cv2
 IMAGE_LEVEL = 1
 PATCH_RES = 224
 
-dirpaths = glob('../new_dataset/*.svs')
-
+dirpaths = glob('../dataset/*/*.svs')
 
 dirnum = 0
 
@@ -36,8 +35,6 @@ for dirpath in dirpaths:
     total_patches = (x_dim // PATCH_RES) * (y_dim // PATCH_RES)
     mostly_white_patches = 0
 
-    if os.path.exists(f'../new_imgs/{dirpath[15:38]}'):
-        continue
 
     
     os.mkdir(f'../new_imgs/{dirpath[15:38]}')
